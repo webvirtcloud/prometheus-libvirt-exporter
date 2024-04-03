@@ -2,7 +2,6 @@
 
 import time
 import libvirt
-import platform
 from xml.dom import minidom
 from optparse import OptionParser
 from prometheus_client import start_http_server, Gauge, Counter
