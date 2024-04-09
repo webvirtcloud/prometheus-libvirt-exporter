@@ -16,10 +16,13 @@ libvirt_domain_info_cpu_time_user = Counter('libvirt_domain_info_cpu_time_user',
 libvirt_domain_info_cpu_time_system = Counter('libvirt_domain_info_cpu_time_system', "CPU time spent by the domain in system mode", labels)
 
 labels = ['domain']
-libvirt_domain_info_memory_actual = Gauge('libvirt_domain_info_memory_actual', "Actual memory usage of the domain", labels)
+libvirt_domain_info_memory_actual = Gauge('libvirt_domain_info_memory_actual', "Actual memory of the domain", labels)
 libvirt_domain_info_memory_usable = Gauge('libvirt_domain_info_memory_usable', "Usable memory of the domain", labels)
 libvirt_domain_info_memory_unused = Gauge('libvirt_domain_info_memory_unused', "Unused memory of the domain", labels)
 libvirt_domain_info_memory_available = Gauge('libvirt_domain_info_memory_available', "Available memory of the domain", labels)
+
+labels = ['dev', 'domain']
+libvirt_domain_info_vcpu_time = Counter('libvirt_domain_info_vcpu_time', "CPU time used by the domain in nanoseconds", labels)
 
 labels = ['dev', 'domain']
 libvirt_domain_info_block_read_bytes = Counter('libvirt_domain_info_block_read_bytes', "Bytes read per second", labels)
@@ -32,9 +35,6 @@ libvirt_domain_info_net_rx_bytes = Counter('libvirt_domain_info_net_rx_bytes', "
 libvirt_domain_info_net_rx_packets = Counter('libvirt_domain_info_net_rx_packets', "Packets received per second", labels)
 libvirt_domain_info_net_tx_bytes = Counter('libvirt_domain_info_net_tx_bytes', "Bytes transmitted per second", labels)
 libvirt_domain_info_net_tx_packets = Counter('libvirt_domain_info_net_tx_packets', "Packets transmitted per second", labels)
-
-labels = ['dev', 'domain']
-libvirt_domain_info_vcpu_time = Counter('libvirt_domain_info_vcpu_time', "CPU time used by the domain in nanoseconds", labels)
 
 
 def main(uri):
@@ -51,7 +51,7 @@ def main(uri):
     if conn is not None:
         libvirt_up.set(1)
 
-        for dom in conn.listAllDomains():
+        for dom in conn.listAllDomains(True):
             raw_xml = dom.XMLDesc(0)
             xml = minidom.parseString(raw_xml)
             dom_name = dom.name()
@@ -67,10 +67,10 @@ def main(uri):
 
             # Get memory stats
             memory_stats = dom.memoryStats()
-            libvirt_domain_info_memory_actual.labels(domain=dom_name).set(memory_stats.get('actual'))
-            libvirt_domain_info_memory_usable.labels(domain=dom_name).set(memory_stats.get('usable'))
-            libvirt_domain_info_memory_unused.labels(domain=dom_name).set(memory_stats.get('unused'))
-            libvirt_domain_info_memory_available.labels(domain=dom_name).set(memory_stats.get('available'))
+            libvirt_domain_info_memory_actual.labels(domain=dom_name).set(memory_stats.get('actual', 0))
+            libvirt_domain_info_memory_usable.labels(domain=dom_name).set(memory_stats.get('usable', 0))
+            libvirt_domain_info_memory_unused.labels(domain=dom_name).set(memory_stats.get('unused', 0))
+            libvirt_domain_info_memory_available.labels(domain=dom_name).set(memory_stats.get('available', 0))
 
             # Get block stats
             for diskType in xml.getElementsByTagName('disk'):
@@ -111,5 +111,5 @@ if __name__ == '__main__':
     print("Started Prometheus Libvirt Exporter")
 
     while True:
-        main(options.uri)
+        main(options.uri)  
         time.sleep(1)
