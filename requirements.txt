@@ -1,2 +1,2 @@
-libvirt-python==9.10.0
-prometheus_client==0.20.0
+libvirt-python
+prometheus_client
