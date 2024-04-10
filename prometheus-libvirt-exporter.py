@@ -24,6 +24,20 @@ libvirt_domain_info_state = Gauge(
     label,
 )
 
+# vCPU numbers
+libvirt_domain_info_vcpu_num = Gauge(
+    "libvirt_domain_info_vcpu_num",
+    "Number of virtual CPUs for the domain",
+    label,
+)
+
+# vCPU time
+libvirt_domain_info_vcpu_time = Counter(
+    "libvirt_domain_info_vcpu_time",
+    "CPU time spent by the domain in nanoseconds",
+    label,
+)
+
 # CPU stats
 libvirt_domain_info_cpu_time = Counter(
     "libvirt_domain_info_cpu_time",
@@ -125,9 +139,14 @@ def main(uri):
         for dom in conn.listAllDomains(True):
             dom_xml = minidom.parseString(dom.XMLDesc(0))
             dom_name = dom.name()
+            dom_state, dom_maxmem, dom_mem, dom_vcpus, dom_cputime = dom.info()
 
-            dom_state = dom.info()[0]
+            # Get domain state
             libvirt_domain_info_state.labels(domain=dom_name).set(dom_state)
+
+            # Get vCPU details
+            libvirt_domain_info_vcpu_num.labels(domain=dom_name).set(dom_vcpus)
+            libvirt_domain_info_vcpu_time.labels(domain=dom_name).inc(dom_cputime)
 
             # Get CPU stats
             cpu_statas = dom.getCPUStats(True)[0]
