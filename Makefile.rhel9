@@ -48,5 +48,5 @@ package:
 
 .PHONY: clean
 clean:
-	@rm -rf release build dist __pycache__ prometheus-libvirt-exporter.spec
+	@rm -rf build dist __pycache__ prometheus-libvirt-exporter.spec
 	@echo "==> Cleaned"
