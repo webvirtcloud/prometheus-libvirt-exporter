@@ -32,24 +32,24 @@ libvirt_domain_info_vcpu_num = Gauge(
 )
 
 # vCPU time
-libvirt_domain_info_vcpu_time = Counter(
+libvirt_domain_info_vcpu_time = Gauge(
     "libvirt_domain_info_vcpu_time",
     "CPU time spent by the domain in nanoseconds",
     label,
 )
 
 # CPU stats
-libvirt_domain_info_cpu_time = Counter(
+libvirt_domain_info_cpu_time = Gauge(
     "libvirt_domain_info_cpu_time",
     "CPU time spent by the domain in nanoseconds",
     label,
 )
-libvirt_domain_info_cpu_time_user = Counter(
+libvirt_domain_info_cpu_time_user = Gauge(
     "libvirt_domain_info_cpu_time_user",
     "CPU time spent by the domain in user mode",
     label,
 )
-libvirt_domain_info_cpu_time_system = Counter(
+libvirt_domain_info_cpu_time_system = Gauge(
     "libvirt_domain_info_cpu_time_system",
     "CPU time spent by the domain in system mode",
     label,
@@ -78,44 +78,44 @@ libvirt_domain_info_memory_available = Gauge(
 )
 
 # Block stats
-libvirt_domain_info_block_read_bytes = Counter(
+libvirt_domain_info_block_read_bytes = Gauge(
     "libvirt_domain_info_block_read_bytes", 
     "Bytes read per second", 
     labels
 )
-libvirt_domain_info_block_read_requests = Counter(
+libvirt_domain_info_block_read_requests = Gauge(
     "libvirt_domain_info_block_read_requests", 
     "Read requests per second", 
     labels
 )
-libvirt_domain_info_block_write_bytes = Counter(
+libvirt_domain_info_block_write_bytes = Gauge(
     "libvirt_domain_info_block_write_bytes", 
     "Bytes written per second", 
     labels
 )
-libvirt_domain_info_block_write_requests = Counter(
+libvirt_domain_info_block_write_requests = Gauge(
     "libvirt_domain_info_block_write_requests", 
     "Write requests per second", 
     labels
 )
 
 # Network stats
-libvirt_domain_info_net_rx_bytes = Counter(
+libvirt_domain_info_net_rx_bytes = Gauge(
     "libvirt_domain_info_net_rx_bytes", 
     "Bytes received per second", 
     labels
 )
-libvirt_domain_info_net_rx_packets = Counter(
+libvirt_domain_info_net_rx_packets = Gauge(
     "libvirt_domain_info_net_rx_packets", 
     "Packets received per second", 
     labels
 )
-libvirt_domain_info_net_tx_bytes = Counter(
+libvirt_domain_info_net_tx_bytes = Gauge(
     "libvirt_domain_info_net_tx_bytes", 
     "Bytes transmitted per second", 
     labels
 )
-libvirt_domain_info_net_tx_packets = Counter(
+libvirt_domain_info_net_tx_packets = Gauge(
     "libvirt_domain_info_net_tx_packets", 
     "Packets transmitted per second", 
     labels
@@ -146,33 +146,35 @@ def main(uri):
 
             # Get vCPU details
             libvirt_domain_info_vcpu_num.labels(domain=dom_name).set(dom_vcpus)
-            libvirt_domain_info_vcpu_time.labels(domain=dom_name).inc(dom_cputime)
+
+            # Get vCPU time
+            libvirt_domain_info_vcpu_time.labels(domain=dom_name).set(dom_cputime)
 
             # Get CPU stats
-            cpu_statas = dom.getCPUStats(True)[0]
-            libvirt_domain_info_cpu_time.labels(domain=dom_name).inc(
-                cpu_statas.get("cpu_time", 0)
+            cpu_stats = dom.getCPUStats(True)[0]
+            libvirt_domain_info_cpu_time.labels(domain=dom_name).set(
+                cpu_stats.get("cpu_time")
             )
-            libvirt_domain_info_cpu_time_user.labels(domain=dom_name).inc(
-                cpu_statas.get("user_time", 0)
+            libvirt_domain_info_cpu_time_user.labels(domain=dom_name).set(
+                cpu_stats.get("user_time")
             )
-            libvirt_domain_info_cpu_time_system.labels(domain=dom_name).inc(
-                cpu_statas.get("system_time", 0)
+            libvirt_domain_info_cpu_time_system.labels(domain=dom_name).set(
+                cpu_stats.get("system_time")
             )
 
             # Get memory stats
             memory_stats = dom.memoryStats()
             libvirt_domain_info_memory_actual.labels(domain=dom_name).set(
-                memory_stats.get("actual", 0)
+                memory_stats.get("actual")
             )
             libvirt_domain_info_memory_usable.labels(domain=dom_name).set(
-                memory_stats.get("usable", 0)
+                memory_stats.get("usable")
             )
             libvirt_domain_info_memory_unused.labels(domain=dom_name).set(
-                memory_stats.get("unused", 0)
+                memory_stats.get("unused")
             )
             libvirt_domain_info_memory_available.labels(domain=dom_name).set(
-                memory_stats.get("available", 0)
+                memory_stats.get("available")
             )
 
             # Get block stats
@@ -184,16 +186,16 @@ def main(uri):
                         rd_req, rd_byte, wr_req, wr_byte, _ = dom.blockStats(disk_dev)
                         libvirt_domain_info_block_read_bytes.labels(
                             dev=disk_dev, domain=dom_name
-                        ).inc(rd_byte)
+                        ).set(rd_byte)
                         libvirt_domain_info_block_read_requests.labels(
                             dev=disk_dev, domain=dom_name
-                        ).inc(rd_req)
+                        ).set(rd_req)
                         libvirt_domain_info_block_write_bytes.labels(
                             dev=disk_dev, domain=dom_name
-                        ).inc(wr_byte)
+                        ).set(wr_byte)
                         libvirt_domain_info_block_write_requests.labels(
                             dev=disk_dev, domain=dom_name
-                        ).inc(wr_req)
+                        ).set(wr_req)
 
             # Get network stats
             for ifaceType in dom_xml.getElementsByTagName("interface"):
@@ -213,16 +215,16 @@ def main(uri):
                         ) = dom.interfaceStats(iface_dev)
                         libvirt_domain_info_net_rx_bytes.labels(
                             dev=iface_dev, domain=dom_name
-                        ).inc(rx_byte)
+                        ).set(rx_byte)
                         libvirt_domain_info_net_rx_packets.labels(
                             dev=iface_dev, domain=dom_name
-                        ).inc(rx_pack)
+                        ).set(rx_pack)
                         libvirt_domain_info_net_tx_bytes.labels(
                             dev=iface_dev, domain=dom_name
-                        ).inc(tx_byte)
+                        ).set(tx_byte)
                         libvirt_domain_info_net_tx_packets.labels(
                             dev=iface_dev, domain=dom_name
-                        ).inc(tx_pack)
+                        ).set(tx_pack)
 
         conn.close()
 
