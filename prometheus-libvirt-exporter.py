@@ -153,28 +153,28 @@ def main(uri):
             # Get CPU stats
             cpu_stats = dom.getCPUStats(True)[0]
             libvirt_domain_info_cpu_time.labels(domain=dom_name).set(
-                cpu_stats.get("cpu_time")
+                cpu_stats.get("cpu_time", 0)
             )
             libvirt_domain_info_cpu_time_user.labels(domain=dom_name).set(
-                cpu_stats.get("user_time")
+                cpu_stats.get("user_time", 0)
             )
             libvirt_domain_info_cpu_time_system.labels(domain=dom_name).set(
-                cpu_stats.get("system_time")
+                cpu_stats.get("system_time", 0)
             )
 
             # Get memory stats
             memory_stats = dom.memoryStats()
             libvirt_domain_info_memory_actual.labels(domain=dom_name).set(
-                memory_stats.get("actual")
+                memory_stats.get("actual", 0)
             )
             libvirt_domain_info_memory_usable.labels(domain=dom_name).set(
-                memory_stats.get("usable")
+                memory_stats.get("usable", 0)
             )
             libvirt_domain_info_memory_unused.labels(domain=dom_name).set(
-                memory_stats.get("unused")
+                memory_stats.get("unused", 0)
             )
             libvirt_domain_info_memory_available.labels(domain=dom_name).set(
-                memory_stats.get("available")
+                memory_stats.get("available", 0)
             )
 
             # Get block stats
