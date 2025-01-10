@@ -16,13 +16,12 @@ FROM rockylinux:8
 
 COPY requirements.txt /app/requirements.txt
 
-RUN dnf install -y epel-release && \
+RUN dnf install -y epel-release; \
     dnf install -y gcc \
                    zlib-devel \
                    python3-pip \
                    python3-devel \
-                   libvirt-devel
-
-RUN python3 -m pip install -U pip wheel setuptools && \
-    python3 -m pip install pyinstaller && \
+                   libvirt-devel; \
+    python3 -m pip install -U pip wheel setuptools; \
+    python3 -m pip install pyinstaller; \
     python3 -m pip install -r /app/requirements.txt
